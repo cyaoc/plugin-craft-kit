@@ -13,9 +13,8 @@
   "author": "cyao",
   "license": "MIT",
   "dependencies": {
-    "application-config-path": "^1.0.0",
     "commander": "^12.0.0",
-    "esbuild": "^0.21.2",
+    "esbuild": "^0.21.3",
     "fflate": "^0.8.2",
     "fs-extra": "^11.2.0",
     "node-forge": "^1.3.1"

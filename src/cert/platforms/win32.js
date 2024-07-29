@@ -1,5 +1,6 @@
+const path = require("path");
 const { spawnSync } = require("child_process");
-const { pkgName } = require("../constants");
+const { name: pkgName } = require("../../../package.json");
 
 function addToTrustStores(certPath) {
   spawnSync("certutil", ["-addstore", "-user", "root", certPath], {
@@ -13,4 +14,19 @@ function removeFromTrustStores() {
   });
 }
 
-module.exports = { addToTrustStores, removeFromTrustStores };
+function getApplicationConfigPath(name) {
+  return process.env.LOCALAPPDATA
+    ? path.join(process.env.LOCALAPPDATA, name)
+    : path.join(
+        process.env.USERPROFILE,
+        "Local Settings",
+        "Application Data",
+        name,
+      );
+}
+
+module.exports = {
+  addToTrustStores,
+  removeFromTrustStores,
+  getApplicationConfigPath,
+};

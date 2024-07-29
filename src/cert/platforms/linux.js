@@ -1,11 +1,12 @@
+const path = require("path");
 const { spawnSync } = require("child_process");
-const { pkgName } = require("../constants");
+const { name: pkgName } = require("../../../package.json");
 
 const targetCA = `/usr/local/share/ca-certificates/${pkgName}.crt`;
 
 function addToTrustStores(certPath) {
   console.log(
-    "About to perform an operation that requires administrative privileges, please be prepared to enter your password.",
+    "About to add the certificate to the trusted store, which requires administrative privileges. Please be prepared to enter your password.",
   );
   spawnSync("sudo", ["cp", certPath, targetCA]);
   spawnSync("sudo", ["update-ca-certificates"]);
@@ -13,10 +14,20 @@ function addToTrustStores(certPath) {
 
 function removeFromTrustStores() {
   console.log(
-    "About to perform an operation that requires administrative privileges, please be prepared to enter your password.",
+    "About to remove the certificate from the trusted store, which requires administrative privileges. Please be prepared to enter your password.",
   );
   spawnSync("sudo", ["rm", targetCA], { stdio: "inherit" });
   spawnSync("sudo", ["update-ca-certificates"]);
 }
 
-module.exports = { addToTrustStores, removeFromTrustStores };
+function getApplicationConfigPath(name) {
+  return process.env.XDG_CONFIG_HOME
+    ? path.join(process.env.XDG_CONFIG_HOME, name)
+    : path.join(process.env.HOME, ".config", name);
+}
+
+module.exports = {
+  addToTrustStores,
+  removeFromTrustStores,
+  getApplicationConfigPath,
+};

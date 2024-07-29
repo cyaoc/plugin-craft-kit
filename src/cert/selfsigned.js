@@ -1,5 +1,5 @@
 const forge = require("node-forge");
-const { pkgName } = require("./constants");
+const { name: pkgName } = require("../../package.json");
 
 const VALID_IP =
   /(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}/;
@@ -7,10 +7,114 @@ const VALID_DOMAIN =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.?)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 const DEFAULT_KEY_SIZE = 2048;
 const DEFAULT_VALIDITY_DAYS = 365;
-const locals = ["localhost", "localhost.localdomain", "127.0.0.1"];
+const locals = [
+  "localhost",
+  "localhost.localdomain",
+  "127.0.0.1",
+  // "0.0.0.0",
+  // "::1",
+];
 
-function generateKeyPair(keySize = DEFAULT_KEY_SIZE) {
-  return forge.pki.rsa.generateKeyPair(keySize);
+function toPositiveHex(hexString) {
+  const mostSignificantHexAsInt = parseInt(hexString[0], 16);
+  return mostSignificantHexAsInt < 8
+    ? hexString
+    : `${(mostSignificantHexAsInt - 8).toString()}${hexString.slice(1)}`;
+}
+
+function generateRootCertificate() {
+  const keys = forge.pki.rsa.generateKeyPair(2048);
+  const cert = forge.pki.createCertificate();
+  cert.serialNumber = toPositiveHex(
+    forge.util.bytesToHex(forge.random.getBytesSync(9)),
+  );
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1); // 有效期一年
+  cert.publicKey = keys.publicKey;
+  const attrs = [
+    {
+      name: "commonName",
+      value: "Cyao",
+    },
+    {
+      name: "countryName",
+      value: "CN",
+    },
+    {
+      shortName: "ST",
+      value: "Shanghai",
+    },
+    {
+      name: "localityName",
+      value: "Shanghai",
+    },
+    {
+      name: "organizationName",
+      value: "Cyao",
+    },
+  ];
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+  cert.sign(keys.privateKey, forge.md.sha256.create());
+  const certPem = forge.pki.certificateToPem(cert);
+  const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+  return { certPem, privateKeyPem };
+}
+
+function generateCertificateForDomains(
+  rootCertPem,
+  rootPrivateKeyPem,
+  domains,
+  ips = ["localhost", "0.0.0.0", "127.0.0.1"],
+) {
+  const rootCert = forge.pki.certificateFromPem(rootCertPem);
+  const rootPrivateKey = forge.pki.privateKeyFromPem(rootPrivateKeyPem);
+  const keys = forge.pki.rsa.generateKeyPair(2048);
+
+  const cert = forge.pki.createCertificate();
+
+  cert.serialNumber = "02";
+
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1); // 有效期一年
+
+  cert.publicKey = keys.publicKey;
+
+  cert.setSubject([
+    {
+      name: "commonName",
+      value: domains[0],
+    },
+  ]);
+
+  cert.setIssuer(rootCert.subject.attributes);
+
+  // 添加域名和IP地址
+  const altNames = domains
+    .map((domain) => ({
+      type: 2, // DNS
+      value: domain,
+    }))
+    .concat(
+      ips.map((ip) => ({
+        type: 7, // IP
+        ip: ip,
+      })),
+    );
+
+  cert.setExtensions([
+    {
+      name: "subjectAltName",
+      altNames: altNames,
+    },
+  ]);
+
+  cert.sign(rootPrivateKey, forge.md.sha256.create());
+  const certPem = forge.pki.certificateToPem(cert);
+  const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+  return { certPem, privateKeyPem };
 }
 
 function getAlgorithm(key) {
@@ -22,99 +126,54 @@ function getAlgorithm(key) {
   }
 }
 
-function toPositiveHex(hexString) {
-  let mostSignificantHexAsInt = parseInt(hexString[0], 16);
-  if (mostSignificantHexAsInt < 8) {
-    return hexString;
-  }
+const filter = (domain) =>
+  domain &&
+  domain.trim() !== "" &&
+  !locals.includes(domain) &&
+  (VALID_IP.test(domain) || VALID_DOMAIN.test(domain));
 
-  mostSignificantHexAsInt -= 8;
-  return mostSignificantHexAsInt.toString() + hexString.substring(1);
-}
+const generateKeyPair = (keySize) => forge.pki.rsa.generateKeyPair(keySize);
 
-function filter(domain) {
-  return (
-    domain &&
-    domain.trim() !== "" &&
-    !locals.includes(domain) &&
-    (VALID_IP.test(domain) || VALID_DOMAIN.test(domain))
-  );
-}
+const createCertificate = () => forge.pki.createCertificate();
 
-function createCertificate(attrs, options, isCA = false) {
-  const keyPair = options.keyPair || generateKeyPair(options.keySize);
-  const cert = forge.pki.createCertificate();
-  cert.serialNumber = toPositiveHex(
-    forge.util.bytesToHex(forge.random.getBytesSync(9)),
-  );
+const setCertificateValidity = (cert, days) => {
   cert.validity.notBefore = new Date();
-  cert.validity.notAfter = new Date(cert.validity.notBefore);
+  cert.validity.notAfter = new Date();
   cert.validity.notAfter.setDate(
-    cert.validity.notBefore.getDate() + (options.days || DEFAULT_VALIDITY_DAYS),
+    cert.validity.notBefore.getDate() + (days || DEFAULT_VALIDITY_DAYS),
   );
-  cert.setSubject(attrs);
-  cert.publicKey = keyPair.publicKey;
+};
 
-  if (isCA) {
-    cert.setIssuer(attrs);
-  } else if (options.ca) {
-    const caCert = forge.pki.certificateFromPem(options.ca.cert);
-    cert.setIssuer(caCert.subject.attributes);
-    cert.sign(
-      forge.pki.privateKeyFromPem(options.ca.private),
-      getAlgorithm(options.algorithm),
-    );
-  } else {
-    throw new Error("CA information is required for non-CA certificates.");
-  }
-
-  if (isCA) {
-    cert.sign(keyPair.privateKey, getAlgorithm(options.algorithm));
-  }
-
-  return {
-    cert,
-    keyPair,
-  };
-}
+const signCertificate = (cert, privateKey, algorithm) => {
+  cert.sign(privateKey, getAlgorithm(algorithm));
+};
 
 function generateCA() {
-  const attrs = [{ name: "commonName", value: pkgName }];
-  const options = {
+  return generate([{ name: "commonName", value: pkgName }], {
     days: 7300,
     keySize: DEFAULT_KEY_SIZE,
     algorithm: "sha256",
-    extensions: [
-      {
-        name: "basicConstraints",
-        cA: true,
-      },
-    ],
-  };
-
-  return createCertificate(attrs, options, true);
+    extensions: [{ name: "basicConstraints", cA: true }],
+  });
 }
 
 function generateBy(rootCA, domains) {
   const attrs = [{ name: "commonName", value: locals[0] }];
   const altNames = domains
-    .filter(this.filter)
+    .filter(filter)
     .concat(locals)
-    .map((domain) => {
-      return VALID_IP.test(domain)
+    .map((domain) =>
+      VALID_IP.test(domain)
         ? { type: 7, ip: domain }
-        : { type: 2, value: domain };
-    });
+        : { type: 2, value: domain },
+    );
 
   const options = {
     keySize: DEFAULT_KEY_SIZE,
     ca: rootCA,
     algorithm: "sha256",
     extensions: [
-      {
-        name: "basicConstraints",
-        cA: false,
-      },
+      { name: "basicConstraints", cA: false },
       {
         name: "keyUsage",
         keyCertSign: false,
@@ -130,73 +189,144 @@ function generateBy(rootCA, domains) {
         codeSigning: true,
         timeStamping: true,
       },
-      {
-        name: "subjectAltName",
-        altNames,
-      },
+      { name: "subjectAltName", altNames },
     ],
   };
 
-  return createCertificate(attrs, options);
+  return generate(attrs, options);
 }
 
-function convertToPem(cert, keyPair) {
-  return {
+function generateClientCertificate(attrs, keyPair, options, pem) {
+  const clientKeys = generateKeyPair(1024);
+  const clientCert = createCertificate();
+  clientCert.serialNumber = toPositiveHex(
+    forge.util.bytesToHex(forge.random.getBytesSync(9)),
+  );
+  setCertificateValidity(clientCert, 365);
+
+  const clientAttrs = attrs.map((attr) =>
+    attr.name === "commonName"
+      ? { name: "commonName", value: options.clientCertificateCN || pkgName }
+      : attr,
+  );
+
+  clientCert.setSubject(clientAttrs);
+  clientCert.setIssuer(attrs);
+  clientCert.publicKey = clientKeys.publicKey;
+  signCertificate(clientCert, keyPair.privateKey, "sha256");
+
+  pem.clientPrivate = forge.pki.privateKeyToPem(clientKeys.privateKey);
+  pem.clientPublic = forge.pki.publicKeyToPem(clientKeys.publicKey);
+  pem.clientCert = forge.pki.certificateToPem(clientCert);
+
+  if (options.pkcs7) {
+    const clientP7 = forge.pkcs7.createSignedData();
+    clientP7.addCertificate(clientCert);
+    pem.clientPkcs7 = forge.pkcs7.messageToPem(clientP7);
+  }
+}
+
+function generate(
+  attrs = [
+    { name: "commonName", value: "example.org" },
+    { name: "countryName", value: "US" },
+    { shortName: "ST", value: "Virginia" },
+    { name: "localityName", value: "Blacksburg" },
+    { name: "organizationName", value: "Test" },
+    { shortName: "OU", value: "Test" },
+  ],
+  options = {},
+) {
+  const keySize = options.keySize || 1024;
+  const keyPair = options.keyPair
+    ? {
+        privateKey: forge.pki.privateKeyFromPem(options.keyPair.privateKey),
+        publicKey: forge.pki.publicKeyFromPem(options.keyPair.publicKey),
+      }
+    : generateKeyPair(keySize);
+
+  const cert = createCertificate();
+  cert.serialNumber = toPositiveHex(
+    forge.util.bytesToHex(forge.random.getBytesSync(9)),
+  );
+
+  setCertificateValidity(cert, options.days);
+
+  const caPrivateKey = options.ca?.private
+    ? forge.pki.privateKeyFromPem(options.ca.private)
+    : keyPair.privateKey;
+  const caCert = options.ca?.cert
+    ? forge.pki.certificateFromPem(options.ca.cert)
+    : cert;
+  const issuerAttrs = options.ca ? caCert.subject.attributes : attrs;
+
+  cert.setSubject(attrs);
+  cert.setIssuer(issuerAttrs);
+  cert.publicKey = keyPair.publicKey;
+
+  cert.setExtensions(
+    options.extensions || [
+      { name: "basicConstraints", cA: true },
+      {
+        name: "keyUsage",
+        keyCertSign: true,
+        digitalSignature: true,
+        nonRepudiation: true,
+        keyEncipherment: true,
+        dataEncipherment: true,
+      },
+      {
+        name: "subjectAltName",
+        altNames: [{ type: 6, value: "http://example.org/webid#me" }],
+      },
+    ],
+  );
+
+  signCertificate(cert, caPrivateKey, options.algorithm);
+
+  const fingerprint = forge.md.sha1
+    .create()
+    .update(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes())
+    .digest()
+    .toHex()
+    .match(/.{2}/g)
+    .join(":");
+
+  const pem = {
     private: forge.pki.privateKeyToPem(keyPair.privateKey),
     public: forge.pki.publicKeyToPem(keyPair.publicKey),
     cert: forge.pki.certificateToPem(cert),
+    fingerprint,
   };
-}
 
-function generate(attrs, options) {
-  const { cert, keyPair } = createCertificate(attrs, options, options.isCA);
-
-  const pem = convertToPem(cert, keyPair);
+  if (options.pkcs7) {
+    const p7 = forge.pkcs7.createSignedData();
+    p7.addCertificate(cert);
+    pem.pkcs7 = forge.pkcs7.messageToPem(p7);
+  }
 
   if (options.clientCertificate) {
-    const clientOptions = {
-      keySize: options.keySize || DEFAULT_KEY_SIZE,
-      algorithm: options.algorithm,
-      days: options.days || DEFAULT_VALIDITY_DAYS,
-      ca: {
-        cert: pem.cert,
-        private: pem.private,
-      },
-    };
-
-    const clientAttrs = attrs.map((attr) => {
-      if (attr.name === "commonName" && options.clientCertificateCN) {
-        return { name: "commonName", value: options.clientCertificateCN };
-      }
-      return attr;
-    });
-
-    const { cert: clientCert, keyPair: clientKeyPair } = createCertificate(
-      clientAttrs,
-      clientOptions,
-    );
-
-    Object.assign(pem, {
-      clientprivate: forge.pki.privateKeyToPem(clientKeyPair.privateKey),
-      clientpublic: forge.pki.publicKeyToPem(clientKeyPair.publicKey),
-      clientcert: forge.pki.certificateToPem(clientCert),
-    });
+    generateClientCertificate(attrs, keyPair, options, pem);
   }
 
-  if (options.verifyChain && options.ca) {
-    const caCert = forge.pki.certificateFromPem(options.ca.cert);
-    const caStore = forge.pki.createCaStore([caCert]);
-    try {
-      const chainValid = forge.pki.verifyCertificateChain(caStore, [cert]);
-      if (!chainValid) {
-        throw new Error("Certificate chain verification failed.");
-      }
-    } catch (error) {
-      throw new Error(`Certificate chain verification error: ${error.message}`);
-    }
-  }
+  const caStore = forge.pki.createCaStore();
+  caStore.addCertificate(caCert);
+
+  // try {
+  //   forge.pki.verifyCertificateChain(caStore, [cert], (vfd) => {
+  //     if (vfd !== true) throw new Error("Certificate could not be verified.");
+  //     return true;
+  //   });
+  // } catch (ex) {
+  //   throw new Error(ex.message);
+  // }
 
   return pem;
 }
 
-module.exports = { filter, generateCA, generateBy, generate };
+module.exports = {
+  filter,
+  generateCA,
+  generateBy,
+  generate,
+};
