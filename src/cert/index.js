@@ -6,7 +6,7 @@ const {
   pkgDir,
   isSupported,
 } = require("./constants");
-const selfsigned = require("./selfsigned");
+const { createCA, createCert } = require("./cert");
 const { removeFromTrustStores, addToTrustStores } =
   require("./platforms").platform;
 
@@ -15,30 +15,57 @@ function uninstall() {
   fs.removeSync(pkgDir);
 }
 
-function install() {
+function install({
+  organization = "Developer",
+  countryCode = "CN",
+  state = "Shanghai",
+  locality = "Shanghai",
+  validity = 7300,
+} = {}) {
   if (!isSupported) {
     throw new Error(`Platform not supported: "${process.platform}"`);
   }
 
   if (!fs.existsSync(rootCAPath) && !fs.existsSync(rootCAKeyPath)) {
-    const ca = selfsigned.generateCA();
+    const ca = createCA({
+      organization,
+      countryCode,
+      state,
+      locality,
+      validity,
+    });
     fs.outputFileSync(rootCAPath, ca.cert);
-    fs.outputFileSync(rootCAKeyPath, ca.private);
+    fs.outputFileSync(rootCAKeyPath, ca.key);
     addToTrustStores(rootCAPath);
   }
 }
 
 function certificateFor(requestedDomains = []) {
-  install();
-  const arr = Array.isArray(requestedDomains)
+  const validity = 7300;
+  install({ validity });
+  const requests = Array.isArray(requestedDomains)
     ? requestedDomains
     : [requestedDomains];
-  const domains = arr.filter(selfsigned.filter);
+  const domains = [
+    ...new Set(
+      [
+        "localhost",
+        "localhost.localdomain",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+      ].concat(requests),
+    ),
+  ];
   const ca = {
     cert: fs.readFileSync(rootCAPath),
-    private: fs.readFileSync(rootCAKeyPath),
+    key: fs.readFileSync(rootCAKeyPath),
   };
-  const cert = selfsigned.generateBy(ca, domains);
+  const cert = createCert({
+    ca,
+    domains,
+    validity,
+  });
   return cert;
 }
 
@@ -52,7 +79,7 @@ function gen(
   const certPath = path.join(outputDir, certFileName);
   const keyPath = path.join(outputDir, keyFileName);
   fs.outputFileSync(certPath, cert.cert);
-  fs.outputFileSync(keyPath, cert.private);
+  fs.outputFileSync(keyPath, cert.key);
 }
 
 module.exports = {

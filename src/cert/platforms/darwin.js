@@ -3,7 +3,7 @@ const { spawnSync } = require("child_process");
 
 function addToTrustStores(certPath) {
   console.log(
-    "About to add the certificate to the trusted store, which requires administrative privileges. Please be prepared to enter your password.",
+    "Adding certificate to trusted store. Admin rights required. You may need to enter your password if prompted.",
   );
   spawnSync(
     "sudo",
@@ -28,7 +28,7 @@ function addToTrustStores(certPath) {
 function removeFromTrustStores(certPath) {
   if (certPath) {
     console.log(
-      "About to remove the certificate from the trusted store, which requires administrative privileges. Please be prepared to enter your password.",
+      "Removing certificate from trusted store. Admin rights required. You may need to enter your password if prompted.",
     );
     spawnSync("sudo", ["security", "remove-trusted-cert", "-d", certPath], {
       stdio: "ignore",

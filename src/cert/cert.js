@@ -1,15 +1,7 @@
 const forge = require("node-forge");
 const net = require("node:net");
-const { promisify } = require("node:util");
 
 const { md, pki } = forge;
-
-async function generateKeyPair(bits = 2048, workers = 4) {
-  const generateKeyPairPromise = promisify(
-    pki.rsa.generateKeyPair.bind(pki.rsa),
-  );
-  return generateKeyPairPromise({ bits, workers });
-}
 
 function createCertificate(
   serial,
@@ -33,15 +25,9 @@ function createCertificate(
   return cert;
 }
 
-async function generateCert({
-  subject,
-  issuer,
-  extensions,
-  validity,
-  signWith,
-}) {
+function generateCert({ subject, issuer, extensions, validity, signWith }) {
   const serial = Math.floor(Math.random() * 95000 + 50000).toString();
-  const keyPair = await generateKeyPair();
+  const keyPair = forge.pki.rsa.generateKeyPair(2048);
   const privateKey = signWith
     ? pki.privateKeyFromPem(signWith)
     : keyPair.privateKey;
@@ -61,13 +47,7 @@ async function generateCert({
   };
 }
 
-async function createCA({
-  organization,
-  countryCode,
-  state,
-  locality,
-  validity,
-}) {
+function createCA({ organization, countryCode, state, locality, validity }) {
   const attributes = [
     { name: "commonName", value: organization },
     { name: "countryName", value: countryCode },
@@ -89,7 +69,7 @@ async function createCA({
   });
 }
 
-async function createCert({ domains, validity, organization, email, ca }) {
+function createCert({ domains, validity, organization, email, ca }) {
   const attributes = [{ name: "commonName", value: domains[0] }];
 
   if (organization) {
