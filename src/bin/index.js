@@ -2,6 +2,7 @@
 const { program } = require("commander");
 const { version, description } = require("../../package.json");
 const cert = require("../cert");
+const dev = require("../dev");
 
 program.version(version, "-v, --version").description(description);
 const certCommand = program
@@ -32,5 +33,12 @@ certCommand
   .option("-k, --key-file <filename>", "Private key file name")
   .action((domains, options) => {
     cert.gen(domains, options.outputDir, options.certFile, options.keyFile);
+  });
+
+program
+  .command("dev")
+  .description("Development commands")
+  .action(() => {
+    dev.start();
   });
 program.parse(process.argv);

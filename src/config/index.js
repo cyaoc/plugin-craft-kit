@@ -1,17 +1,22 @@
 const fse = require("fs-extra");
 const path = require("path");
-const { defineConfig } = require("./define");
-const { mergeDeep } = require("./merge");
+const vm = require("vm");
+const { merge } = require("./config");
 
-function loadConfig(configFileName = "kite.config.js") {
+function load(configFileName = "kite.config.js") {
   const configPath = path.resolve(process.cwd(), configFileName);
-  let userConfig = {};
   if (fse.existsSync(configPath)) {
-    userConfig = require(configPath);
+    const fileContent = fse.readFileSync(configPath, "utf-8");
+    const script = new vm.Script(fileContent, { filename: configFileName });
+    const sandbox = { module: {}, exports: {} };
+    vm.createContext(sandbox);
+    script.runInContext(sandbox);
+    const userConfig = sandbox.module.exports || sandbox.exports || {};
+    return merge(userConfig);
   }
-  return mergeDeep({}, defineConfig, userConfig);
+  return merge({});
 }
 
 module.exports = {
-  loadConfig,
+  load,
 };
