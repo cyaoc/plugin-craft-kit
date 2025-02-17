@@ -96,7 +96,18 @@ exports.pluginCraftKit = (options = {}) => {
         ) {
           const manifestPath = path.resolve(process.cwd(), plugin.manifest);
           const manifestContent = fse.readJSONSync(manifestPath);
-          const baseUrl = `http${environments.web?.config?.server?.https ? 's' : ''}://${environments.web?.config?.server?.host || 'localhost'}:${environments.web?.config?.server?.port || 3000}/${environments.web?.config?.output?.distPath?.js || 'static/js'}`;
+          const host =
+            (environments.web?.config?.server?.host === '0.0.0.0'
+              ? 'localhost'
+              : environments.web?.config?.server?.host) || 'localhost';
+          const port = environments.web?.config?.server?.port || 3000;
+          const protocol = environments.web?.config?.server?.https
+            ? 'https'
+            : 'http';
+          const jsPath =
+            environments.web?.config?.output?.distPath?.js || 'static/js';
+
+          const baseUrl = `${protocol}://${host}:${port}/${jsPath}`;
           const pluginContent = await buildDevPlugin({
             dirname: path.dirname(manifestPath),
             manifest: manifestContent,

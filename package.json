@@ -1,10 +1,10 @@
 {
   "name": "@cyaod/plugin-craft-kit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "rsbuild plugin for kintone",
   "main": "./src/index.js",
   "bin": {
-    "plugin-craft-kit": "./src/bin/index.js"
+    "@cyaod/plugin-craft-kit": "./src/bin/index.js"
   },
   "repository": {
     "type": "git",

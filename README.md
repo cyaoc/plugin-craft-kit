@@ -74,6 +74,24 @@ playground/
 └── private.ppk          # 自动生成签名密钥
 ```
 
+### 命令行工具
+```bash
+# 生成并安装CA证书
+npx @cyaod/plugin-craft-kit cert install
+
+# 卸载生成的CA证书
+npx @cyaod/plugin-craft-kit cert uninstall
+
+# 生成并保存证书文件
+npx @cyaod/plugin-craft-kit cert gen [domains...] [options]
+```
+
+gen命令可用选项：
+
+- -o, --output-dir <path> 证书输出目录
+- -c, --cert-file <filename> 证书文件名
+- -k, --key-file <filename> 私钥文件名
+
 ## 许可证
 
 本项目采用 MIT 许可证。

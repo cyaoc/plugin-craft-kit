@@ -43,13 +43,15 @@ function transformScriptUrls(manifest, baseUrl) {
   const types = ['desktop', 'mobile', 'config'];
   for (const type of types) {
     const jsFiles = manifest[type]?.js || [];
-    manifest[type].js = jsFiles.map((file) => {
-      if (!/^https?:\/\//.test(file)) {
-        const name = path.basename(file, path.extname(file));
-        return `${baseUrl}/${name}.js`;
-      }
-      return file;
-    });
+    if (jsFiles.length > 0) {
+      manifest[type].js = jsFiles.map((file) => {
+        if (!/^https?:\/\//.test(file)) {
+          const name = path.basename(file, path.extname(file));
+          return `${baseUrl}/${name}.js`;
+        }
+        return file;
+      });
+    }
   }
   return manifest;
 }
