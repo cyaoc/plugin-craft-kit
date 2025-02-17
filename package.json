@@ -6,6 +6,10 @@
   "bin": {
     "plugin-craft-kit": "./src/bin/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyaoc/plugin-craft-kit"
+  },
   "scripts": {
     "check": "biome check --write",
     "format": "biome format --write"
