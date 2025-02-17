@@ -69,7 +69,7 @@ playground/
 ├── src/
 │   ├── manifest.json    # 插件配置入口
 │   └── rsbuild.config.mjs # 构建配置
-└── private.ppk          # 自动签名密钥
+└── private.ppk          # 自动生成签名密钥
 ```
 
 ## 许可证
