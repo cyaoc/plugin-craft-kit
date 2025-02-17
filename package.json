@@ -1,5 +1,5 @@
 {
-  "name": "plugin-craft-kit",
+  "name": "@cyao/plugin-craft-kit",
   "version": "0.0.1",
   "description": "rsbuild plugin for kintone",
   "main": "./src/index.js",

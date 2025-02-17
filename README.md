@@ -22,6 +22,7 @@
 
 ### ⚡ 极速开发体验
 - 热模块替换 (HMR) 支持
+- injectStyles 自动注入 CSS
 
 ### 📦 自动化部署流
 - 编译产物自动打包为 plugin.zip
@@ -32,7 +33,7 @@
 
 ```bash
 # 1. 安装工具链
-npm install @cyaoc/plugin-craft-kit --save-dev
+npm install @cyao/plugin-craft-kit --save-dev
 
 # 2. 开发模式（自动生成证书 + 热更新）
 rsbuild dev
@@ -43,13 +44,14 @@ rsbuild build
 
 ### 核心配置 (rsbuild.config.mjs)
 ```javascript
-import { pluginCraftKit } from 'plugin-craft-kit';
+import { defineConfig } from '@rsbuild/core';
+import { pluginCraftKit } from '@cyao/plugin-craft-kit';
 
-export default {
+export default defineConfig({
   plugins: [
     pluginCraftKit()
   ]
-};
+});
 ```
 
 ## 高级配置项
