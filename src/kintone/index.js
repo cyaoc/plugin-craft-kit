@@ -1,5 +1,6 @@
 const { KintoneRestAPIClient } = require('@kintone/rest-api-client');
 const logger = require('../utils/logger');
+const { projectName } = require('../common/constants');
 
 async function uploadPlugin({ clientOptions, pluginId, manifest, file }) {
   const client = new KintoneRestAPIClient(clientOptions);
@@ -35,7 +36,7 @@ Important: Please save this Plugin ID!`
 ${message}
 ${
   !pluginId
-    ? `Add this to your @cyaoc/craft-kit options:
+    ? `Add this to your ${projectName} options:
   devTools: {
     upload: {
       pluginId: "${result.id}"

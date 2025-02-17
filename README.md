@@ -33,7 +33,7 @@
 
 ```bash
 # 1. 安装工具链
-npm install @cyao/plugin-craft-kit --save-dev
+npm install @cyaod/plugin-craft-kit --save-dev
 
 # 2. 开发模式（自动生成证书 + 热更新）
 rsbuild dev
@@ -45,7 +45,7 @@ rsbuild build
 ### 核心配置 (rsbuild.config.mjs)
 ```javascript
 import { defineConfig } from '@rsbuild/core';
-import { pluginCraftKit } from '@cyao/plugin-craft-kit';
+import { pluginCraftKit } from '@cyaod/plugin-craft-kit';
 
 export default defineConfig({
   plugins: [
