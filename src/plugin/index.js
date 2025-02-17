@@ -1,37 +1,54 @@
-const fse = require("fs-extra");
-const path = require("path");
-const { createContentsZip, zipFiles } = require("./zip");
-const { sign, getPublicKeyDer } = require("./rsa");
+const path = require('node:path');
+const fse = require('fs-extra');
+const { createContentsZip, zipFiles } = require('./zip');
+const { sign, getPublicKeyDer, generatePPK } = require('./rsa');
+const {
+  getBundledScripts,
+  transformScriptUrls,
+  addDevBadge,
+} = require('./manifest');
 
-// module.exports.gen = (ppk) => {
-//   if (!fs.existsSync(ppk)) {
-//     const keypair = forge.pki.rsa.generateKeyPair(1024);
-//     const privateKey = forge.pki.privateKeyToPem(keypair.privateKey);
-//     fs.outputFileSync(ppk, privateKey);
-//     return privateKey;
-//   }
-//   return fs.readFileSync(ppk);
-// };
+function getPPKContent(ppk) {
+  const ppkPath = path.resolve(process.cwd(), ppk);
+  return !fse.existsSync(ppkPath)
+    ? generatePPK(ppkPath)
+    : fse.readFileSync(ppkPath, 'utf-8');
+}
 
-function main() {
-  const manifest = fse.readFileSync(
-    path.join(__dirname, "../sample/src/manifest.json"),
-  );
-  const ppk = fse.readFileSync(path.join(__dirname, "../sample/private.ppk"));
-  const pluginDir = path.join(__dirname, "../sample/src");
-  const dist = path.join(__dirname, "../dist");
-  const contentsZip = createContentsZip(
-    pluginDir,
-    JSON.parse(manifest.toString()),
-  );
-  const signature = sign(contentsZip, ppk);
-  const publicKeyDer = getPublicKeyDer(ppk.toString());
-  const plugin = zipFiles({
-    "contents.zip": contentsZip,
+function createPluginZip(ppkContent, contentsZip) {
+  const signature = sign(contentsZip, ppkContent);
+  const publicKeyDer = getPublicKeyDer(ppkContent);
+  return zipFiles({
+    'contents.zip': contentsZip,
     PUBKEY: publicKeyDer,
     SIGNATURE: signature,
   });
-  fse.outputFileSync(path.join(dist, "plugin.zip"), plugin);
 }
 
-main();
+async function buildDevPlugin({ dirname, manifest, ppk, baseUrl }) {
+  const ppkContent = getPPKContent(ppk);
+  const iconPath = path.join(dirname, manifest.icon);
+  const devIcon = await addDevBadge(iconPath);
+
+  const contentsZip = createContentsZip(
+    dirname,
+    transformScriptUrls(manifest, baseUrl),
+    {
+      [manifest.icon]: devIcon,
+    },
+  );
+
+  return createPluginZip(ppkContent, contentsZip);
+}
+
+function buildPlugin({ dirname, manifest, ppk, assetsByChunkName, distPath }) {
+  const ppkContent = getPPKContent(ppk);
+  const contentsZip = createContentsZip(
+    dirname,
+    manifest,
+    getBundledScripts(manifest, assetsByChunkName, distPath),
+  );
+  return createPluginZip(ppkContent, contentsZip);
+}
+
+module.exports = { buildPlugin, buildDevPlugin };

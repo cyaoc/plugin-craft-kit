@@ -1,43 +1,44 @@
-const path = require("path");
-const { spawnSync } = require("child_process");
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const logger = require('../../utils/logger');
 
 function addToTrustStores(certPath) {
-  console.log(
-    "Adding certificate to trusted store. Admin rights required. You may need to enter your password if prompted.",
+  logger.log(
+    'Adding certificate to trusted store. Admin rights required. You may need to enter your password if prompted.',
   );
   spawnSync(
-    "sudo",
+    'sudo',
     [
-      "security",
-      "add-trusted-cert",
-      "-d",
-      "-r",
-      "trustRoot",
-      "-k",
-      "/Library/Keychains/System.keychain",
-      "-p",
-      "ssl",
-      "-p",
-      "basic",
+      'security',
+      'add-trusted-cert',
+      '-d',
+      '-r',
+      'trustRoot',
+      '-k',
+      '/Library/Keychains/System.keychain',
+      '-p',
+      'ssl',
+      '-p',
+      'basic',
       certPath,
     ],
-    { stdio: "inherit" },
+    { stdio: 'inherit' },
   );
 }
 
 function removeFromTrustStores(certPath) {
   if (certPath) {
-    console.log(
-      "Removing certificate from trusted store. Admin rights required. You may need to enter your password if prompted.",
+    logger.log(
+      'Removing certificate from trusted store. Admin rights required. You may need to enter your password if prompted.',
     );
-    spawnSync("sudo", ["security", "remove-trusted-cert", "-d", certPath], {
-      stdio: "ignore",
+    spawnSync('sudo', ['security', 'remove-trusted-cert', '-d', certPath], {
+      stdio: 'ignore',
     });
   }
 }
 
 function getApplicationConfigPath(name) {
-  return path.join(process.env.HOME, "Library", "Application Support", name);
+  return path.join(process.env.HOME, 'Library', 'Application Support', name);
 }
 
 module.exports = {

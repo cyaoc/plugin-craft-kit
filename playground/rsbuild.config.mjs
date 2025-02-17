@@ -1,31 +1,22 @@
 import { defineConfig } from '@rsbuild/core';
-import { pluginReact } from '@rsbuild/plugin-react';
-import fs from 'fs';
+import { pluginCraftKit } from '../src';
 
 export default defineConfig({
-  plugins: [pluginReact()],
-  output: {
-    injectStyles: true,
-  },
-  tools: {
-    htmlPlugin: false,
-  },
-  server: {
-    https: {
-      key: fs.readFileSync('private.pem'),
-      cert: fs.readFileSync('cert.pem'),
-    },
-  },
-  dev: {
-    client: {
-      protocol: 'wss',
-      host: '127.0.0.1',
-      port: 3000,
-    },
-  },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  plugins: [
+    pluginCraftKit({
+      plugin: { manifest: 'src/manifest.json' },
+      devTools: {
+        upload: {
+          client: {
+            baseUrl: process.env.KINTONE_BASE_URL,
+            auth: {
+              username: process.env.KINTONE_USERNAME,
+              password: process.env.KINTONE_PASSWORD,
+            },
+          },
+          pluginId: process.env.KINTONE_PLUGINID,
+        },
+      },
+    }),
+  ],
 });

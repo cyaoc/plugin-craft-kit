@@ -1,5 +1,5 @@
-const forge = require("node-forge");
-const net = require("node:net");
+const forge = require('node-forge');
+const net = require('node:net');
 
 const { md, pki } = forge;
 
@@ -13,7 +13,7 @@ function createCertificate(
   signWith,
 ) {
   const cert = pki.createCertificate();
-  cert.serialNumber = Buffer.from(serial).toString("hex");
+  cert.serialNumber = Buffer.from(serial).toString('hex');
   cert.publicKey = publicKey;
   cert.setSubject(subject);
   cert.setIssuer(issuer);
@@ -49,16 +49,16 @@ function generateCert({ subject, issuer, extensions, validity, signWith }) {
 
 function createCA({ organization, countryCode, state, locality, validity }) {
   const attributes = [
-    { name: "commonName", value: organization },
-    { name: "countryName", value: countryCode },
-    { name: "stateOrProvinceName", value: state },
-    { name: "localityName", value: locality },
-    { name: "organizationName", value: organization },
+    { name: 'commonName', value: organization },
+    { name: 'countryName', value: countryCode },
+    { name: 'stateOrProvinceName', value: state },
+    { name: 'localityName', value: locality },
+    { name: 'organizationName', value: organization },
   ];
 
   const extensions = [
-    { name: "basicConstraints", cA: true, critical: true },
-    { name: "keyUsage", keyCertSign: true, critical: true },
+    { name: 'basicConstraints', cA: true, critical: true },
+    { name: 'keyUsage', keyCertSign: true, critical: true },
   ];
 
   return generateCert({
@@ -70,27 +70,27 @@ function createCA({ organization, countryCode, state, locality, validity }) {
 }
 
 function createCert({ domains, validity, organization, email, ca }) {
-  const attributes = [{ name: "commonName", value: domains[0] }];
+  const attributes = [{ name: 'commonName', value: domains[0] }];
 
   if (organization) {
-    attributes.push({ name: "organizationName", value: organization });
+    attributes.push({ name: 'organizationName', value: organization });
   }
 
   if (email) {
-    attributes.push({ name: "emailAddress", value: email });
+    attributes.push({ name: 'emailAddress', value: email });
   }
 
   const extensions = [
-    { name: "basicConstraints", cA: false, critical: true },
+    { name: 'basicConstraints', cA: false, critical: true },
     {
-      name: "keyUsage",
+      name: 'keyUsage',
       digitalSignature: true,
       keyEncipherment: true,
       critical: true,
     },
-    { name: "extKeyUsage", serverAuth: true, clientAuth: true },
+    { name: 'extKeyUsage', serverAuth: true, clientAuth: true },
     {
-      name: "subjectAltName",
+      name: 'subjectAltName',
       altNames: domains.map((domain) => {
         const TYPE_DOMAIN = 2;
         const TYPE_IP = 7;

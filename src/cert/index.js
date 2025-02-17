@@ -1,14 +1,14 @@
-const path = require("path");
-const fs = require("fs-extra");
+const path = require('node:path');
+const fs = require('fs-extra');
 const {
   rootCAPath,
   rootCAKeyPath,
   pkgDir,
   isSupported,
-} = require("./constants");
-const { createCA, createCert } = require("./cert");
+} = require('./constants');
+const { createCA, createCert } = require('./cert');
 const { removeFromTrustStores, addToTrustStores } =
-  require("./platforms").platform;
+  require('./platforms').platform;
 
 function uninstall() {
   removeFromTrustStores(rootCAPath);
@@ -16,10 +16,10 @@ function uninstall() {
 }
 
 function install({
-  organization = "Developer",
-  countryCode = "CN",
-  state = "Shanghai",
-  locality = "Shanghai",
+  organization = 'Developer',
+  countryCode = 'CN',
+  state = 'Shanghai',
+  locality = 'Shanghai',
   validity = 7300,
 } = {}) {
   if (!isSupported) {
@@ -49,11 +49,11 @@ function certificateFor(requestedDomains = []) {
   const domains = [
     ...new Set(
       [
-        "localhost",
-        "localhost.localdomain",
-        "127.0.0.1",
-        "0.0.0.0",
-        "::1",
+        'localhost',
+        'localhost.localdomain',
+        '127.0.0.1',
+        '0.0.0.0',
+        '::1',
       ].concat(requests),
     ),
   ];
@@ -72,8 +72,8 @@ function certificateFor(requestedDomains = []) {
 function gen(
   requestedDomains = [],
   outputDir = process.cwd(),
-  certFileName = "cert.pem",
-  keyFileName = "private.pem",
+  certFileName = 'public.pem',
+  keyFileName = 'private.pem',
 ) {
   const cert = certificateFor(requestedDomains);
   const certPath = path.join(outputDir, certFileName);

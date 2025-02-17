@@ -1,12 +1,13 @@
-const path = require("path");
-const fse = require("fs-extra");
-const { zipSync } = require("fflate");
+const path = require('node:path');
+const fse = require('fs-extra');
+const { zipSync } = require('fflate');
 
-function createContentsZip(pluginDir, manifest) {
+function createContentsZip(pluginDir, manifest, fileContents = {}) {
   const files = sourceList(manifest).reduce((acc, file) => {
-    acc[file] = path.join(pluginDir, file);
+    acc[file] = fileContents[file] || path.join(pluginDir, file);
     return acc;
   }, {});
+  files['manifest.json'] = Buffer.from(JSON.stringify(manifest, null, 2));
   return zipFiles(files);
 }
 
@@ -17,7 +18,7 @@ function zipFiles(files) {
     let content;
     if (Buffer.isBuffer(fileContent)) {
       content = new Uint8Array(fileContent);
-    } else if (typeof fileContent === "string") {
+    } else if (typeof fileContent === 'string') {
       content = fse.readFileSync(fileContent);
       content = new Uint8Array(content);
     } else {
@@ -32,12 +33,12 @@ function zipFiles(files) {
 
 function sourceList(manifest) {
   const sourceTypes = [
-    ["desktop", "js"],
-    ["desktop", "css"],
-    ["mobile", "js"],
-    ["mobile", "css"],
-    ["config", "js"],
-    ["config", "css"],
+    ['desktop', 'js'],
+    ['desktop', 'css'],
+    ['mobile', 'js'],
+    ['mobile', 'css'],
+    ['config', 'js'],
+    ['config', 'css'],
   ];
   const list = sourceTypes
     .map(([type, ext]) => manifest[type]?.[ext])
@@ -46,7 +47,7 @@ function sourceList(manifest) {
     .filter((file) => !/^https?:\/\//.test(file));
 
   if (manifest.config?.html) list.push(manifest.config.html);
-  list.push("manifest.json", manifest.icon);
+  list.push(manifest.icon);
   return Array.from(new Set(list));
 }
 
