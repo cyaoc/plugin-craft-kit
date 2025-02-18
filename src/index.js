@@ -4,6 +4,7 @@ const { generateWebpackEntries } = require('./plugin/manifest');
 const { buildPlugin, buildDevPlugin } = require('./plugin');
 const { certificateFor } = require('./cert');
 const { uploadPlugin } = require('./kintone');
+const { normalizeHost } = require('./utils/network');
 
 const defaultOptions = {
   plugin: {
@@ -63,7 +64,7 @@ exports.pluginCraftKit = (options = {}) => {
             ...config.dev,
             client: {
               protocol: 'wss',
-              host: config.server?.host || 'localhost',
+              host: normalizeHost(config.server?.host),
               port: config.server?.port || 3000,
             },
           },
@@ -96,14 +97,9 @@ exports.pluginCraftKit = (options = {}) => {
         ) {
           const manifestPath = path.resolve(process.cwd(), plugin.manifest);
           const manifestContent = fse.readJSONSync(manifestPath);
-          const host =
-            (environments.web?.config?.server?.host === '0.0.0.0'
-              ? 'localhost'
-              : environments.web?.config?.server?.host) || 'localhost';
-          const port = environments.web?.config?.server?.port || 3000;
-          const protocol = environments.web?.config?.server?.https
-            ? 'https'
-            : 'http';
+          const host = normalizeHost(api.context?.devServer?.hostname);
+          const port = api.context?.devServer?.port || 3000;
+          const protocol = api.context?.devServer?.https ? 'https' : 'http';
           const jsPath =
             environments.web?.config?.output?.distPath?.js || 'static/js';
 
