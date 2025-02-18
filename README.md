@@ -63,7 +63,6 @@ export default defineConfig({
 | plugin.output | string | 'plugin.zip' | 输出文件名称 |
 | devTools.upload | boolean \| object | false | 开发模式是否自动上传kintone插件 |
 | devTools.upload.client | object | null | [@kintone/rest-api-client 参数](https://github.com/kintone/js-sdk/tree/main/packages/rest-api-client#parameters-for-kintonerestapiclient) |
-| devTools.upload.pluginId | string | null | 要更新的插件ID |
 
 ## 示例核心结构
 ```

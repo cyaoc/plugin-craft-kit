@@ -26,12 +26,7 @@ exports.pluginCraftKit = (options = {}) => {
     },
     devTools: {
       ...defaultOptions.devTools,
-      upload: options.devTools?.upload
-        ? {
-            client: options.devTools.upload.client,
-            pluginId: options.devTools.upload.pluginId,
-          }
-        : defaultOptions.devTools.upload,
+      upload: options.devTools?.upload || defaultOptions.devTools.upload,
     },
   };
   const { plugin, devTools } = mergedOptions;
@@ -104,7 +99,7 @@ exports.pluginCraftKit = (options = {}) => {
             environments.web?.config?.output?.distPath?.js || 'static/js';
 
           const baseUrl = `${protocol}://${host}:${port}/${jsPath}`;
-          const pluginContent = await buildDevPlugin({
+          const { zip: pluginContent, id: pluginId } = await buildDevPlugin({
             dirname: path.dirname(manifestPath),
             manifest: manifestContent,
             ppk: plugin.ppk,
@@ -113,8 +108,7 @@ exports.pluginCraftKit = (options = {}) => {
           if (devTools.upload?.client) {
             await uploadPlugin({
               clientOptions: devTools.upload.client,
-              pluginId: devTools.upload.pluginId,
-              manifest: manifestContent,
+              pluginId,
               file: {
                 name: plugin.output,
                 data: pluginContent,
@@ -136,7 +130,7 @@ exports.pluginCraftKit = (options = {}) => {
         const manifestContent = fse.readJSONSync(manifestPath);
         const { assetsByChunkName } = stats?.toJson() || {};
 
-        const pluginContent = buildPlugin({
+        const { zip: pluginContent } = buildPlugin({
           dirname: path.dirname(manifestPath),
           manifest: manifestContent,
           ppk: plugin.ppk,

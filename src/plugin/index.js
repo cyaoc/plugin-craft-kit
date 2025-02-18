@@ -1,7 +1,12 @@
 const path = require('node:path');
 const fse = require('fs-extra');
 const { createContentsZip, zipFiles } = require('./zip');
-const { sign, getPublicKeyDer, generatePPK } = require('./rsa');
+const {
+  sign,
+  getPublicKeyDer,
+  generatePPK,
+  generatePluginId,
+} = require('./rsa');
 const {
   getBundledScripts,
   transformScriptUrls,
@@ -18,11 +23,15 @@ function getPPKContent(ppk) {
 function createPluginZip(ppkContent, contentsZip) {
   const signature = sign(contentsZip, ppkContent);
   const publicKeyDer = getPublicKeyDer(ppkContent);
-  return zipFiles({
-    'contents.zip': contentsZip,
-    PUBKEY: publicKeyDer,
-    SIGNATURE: signature,
-  });
+  const pluginId = generatePluginId(publicKeyDer);
+  return {
+    zip: zipFiles({
+      'contents.zip': contentsZip,
+      PUBKEY: publicKeyDer,
+      SIGNATURE: signature,
+    }),
+    id: pluginId,
+  };
 }
 
 async function buildDevPlugin({ dirname, manifest, ppk, baseUrl }) {

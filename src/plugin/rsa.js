@@ -31,29 +31,21 @@ function generatePPK(ppkPath) {
   return privateKey;
 }
 
-// const crypto = require('node:crypto');
-// function generatePluginId(publicKeyDer) {
-//   // 2. 计算SHA-256哈希
-//   const hash = crypto.createHash('sha256').update(publicKeyDer).digest();
-
-//   // 3. 转为十六进制并截取前32字符
-//   const hexDigest = hash.toString('hex').substring(0, 32);
-
-//   // 4. 字符替换：0-9a-f -> a-p
-//   const searchChars = '0123456789abcdef';
-//   const replaceChars = 'abcdefghijklmnop';
-//   let pluginId = '';
-//   for (const c of hexDigest) {
-//     const index = searchChars.indexOf(c);
-//     pluginId += replaceChars.charAt(index);
-//   }
-
-//   return pluginId;
-// }
+function generatePluginId(publicKeyDer) {
+  const md = forge.md.sha256.create();
+  md.update(publicKeyDer.toString('binary'));
+  const hash = Buffer.from(md.digest().bytes(), 'binary');
+  const hexDigest = hash.subarray(0, 16).toString('hex');
+  return hexDigest.replace(
+    /[0-9a-f]/g,
+    (c) => 'abcdefghijklmnop'['0123456789abcdef'.indexOf(c)],
+  );
+}
 
 module.exports = {
   sign,
   generate,
   getPublicKeyDer,
   generatePPK,
+  generatePluginId,
 };
