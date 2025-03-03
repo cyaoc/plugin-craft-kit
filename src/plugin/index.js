@@ -34,17 +34,22 @@ function createPluginZip(ppkContent, contentsZip) {
   };
 }
 
-async function buildDevPlugin({ dirname, manifest, ppk, baseUrl }) {
+async function buildDevPlugin({ dirname, manifest, ppk, baseUrl, devTools }) {
   const ppkContent = getPPKContent(ppk);
   const iconPath = path.join(dirname, manifest.icon);
-  const devIcon = await addDevBadge(iconPath);
+
+  // 根据配置决定是否处理图标
+  const iconType = devTools?.icon?.type || false;
+  const devIcon = iconType ? await addDevBadge(iconPath) : undefined;
 
   const contentsZip = createContentsZip(
     dirname,
     transformScriptUrls(manifest, baseUrl),
-    {
-      [manifest.icon]: devIcon,
-    },
+    devIcon
+      ? {
+          [manifest.icon]: devIcon,
+        }
+      : undefined,
   );
 
   return createPluginZip(ppkContent, contentsZip);

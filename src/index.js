@@ -14,6 +14,9 @@ const defaultOptions = {
   },
   devTools: {
     upload: false,
+    icon: {
+      type: false, // false | 'badge'
+    },
   },
 };
 
@@ -27,8 +30,13 @@ exports.pluginCraftKit = (options = {}) => {
     devTools: {
       ...defaultOptions.devTools,
       upload: options.devTools?.upload || defaultOptions.devTools.upload,
+      icon: {
+        ...defaultOptions.devTools.icon,
+        ...options.devTools?.icon,
+      },
     },
   };
+
   const { plugin, devTools } = mergedOptions;
 
   return {
@@ -104,6 +112,7 @@ exports.pluginCraftKit = (options = {}) => {
             manifest: manifestContent,
             ppk: plugin.ppk,
             baseUrl,
+            devTools,
           });
           if (devTools.upload?.client) {
             await uploadPlugin({
