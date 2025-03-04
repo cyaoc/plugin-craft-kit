@@ -60,12 +60,14 @@ exports.pluginCraftKit = (options = {}) => {
             filenameHash: false,
             injectStyles: true,
             distPath: {
+              ...config.output?.distPath,
               js: 'js',
             },
           },
           dev: {
             ...config.dev,
             client: {
+              ...config.dev?.client,
               protocol: 'wss',
               host: normalizeHost(config.server?.host),
               port: config.server?.port || 3000,
@@ -78,6 +80,7 @@ exports.pluginCraftKit = (options = {}) => {
           performance: {
             ...config.performance,
             chunkSplit: {
+              ...config.performance?.chunkSplit,
               strategy: 'all-in-one',
             },
           },
@@ -148,6 +151,7 @@ exports.pluginCraftKit = (options = {}) => {
         });
 
         const pluginPath = path.resolve(api.context.distPath, plugin.output);
+        fse.emptyDirSync(api.context.distPath);
         fse.outputFileSync(pluginPath, pluginContent);
       });
     },

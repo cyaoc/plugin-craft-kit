@@ -1,6 +1,6 @@
 {
   "name": "@cyaod/plugin-craft-kit",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "rsbuild plugin for kintone",
   "main": "./src/index.js",
   "bin": {
@@ -27,6 +27,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@rsbuild/core": "^1.2.8"
+    "@rsbuild/core": "^1.2.15"
   }
 }
