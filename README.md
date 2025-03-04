@@ -79,14 +79,6 @@ npm run build
 | devTools.upload | boolean \| object | false | 开发模式是否自动上传kintone插件 |
 | devTools.upload.client | object | null | [@kintone/rest-api-client 参数](https://github.com/kintone/js-sdk/tree/main/packages/rest-api-client#parameters-for-kintonerestapiclient) |
 
-## 示例核心结构
-```
-playground/
-├── src/
-│   ├── manifest.json    # 插件配置入口
-│   └── rsbuild.config.mjs # 构建配置
-└── private.ppk          # 自动生成签名密钥
-```
 
 ### 命令行工具
 ```bash
