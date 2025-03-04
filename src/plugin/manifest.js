@@ -61,7 +61,14 @@ async function addDevBadge(iconPath) {
   const metadata = await image.metadata();
   const size = metadata.width;
 
-  const badgeSize = Math.max(size * 0.25, 24);
+  // 为大尺寸图片提供更合适的角标比例
+  let badgeRatio = 0.25; // 默认为25%
+  if (size > 512) {
+    // 对于大图片，随着尺寸增大，角标比例适当增加
+    badgeRatio = 0.25 + Math.min(0.15, (size - 512) / 10000);
+  }
+  
+  const badgeSize = Math.max(size * badgeRatio, 24);
   const padding = badgeSize * 0.15;
   const svg = `
 <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
