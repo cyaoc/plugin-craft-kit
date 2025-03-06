@@ -4,28 +4,28 @@ import { pluginCraftKit } from '../src';
 export default defineConfig({
   plugins: [
     pluginCraftKit({
-      // 插件基础配置
+      // Plugin basic configuration
       plugin: {
-        manifest: 'src/manifest.json', // 插件清单文件路径
-        // ppk: 'private.ppk',        // 私钥文件路径，默认值：private.ppk
-        // output: 'plugin.zip'        // 插件打包输出文件名，默认值：plugin.zip
+        manifest: 'src/manifest.json', // Path to plugin manifest file
+        // ppk: 'private.ppk',        // Path to private key file, default: private.ppk
+        // output: 'plugin.zip'        // Output filename for packaged plugin, default: plugin.zip
       },
-      // 开发工具配置
+      // Development tools configuration
       devTools: {
-        // 开发环境图标处理配置
+        // Icon processing for development environment
         icon: {
-          // 可选值:
-          // - 'badge': 在右下角添加开发标记（红色角标）
-          // - false: 不处理图标（保持原样）
+          // Available options:
+          // - 'badge': Add development indicator in bottom-right corner (red badge)
+          // - false: No icon processing (keep original)
           type: 'badge',
         },
-        // 自动上传配置
+        // Auto-upload configuration
         upload: {
-          // Kintone REST API 客户端配置
+          // Kintone REST API client configuration
           client: {
-            // Kintone 环境 URL
+            // Kintone environment URL
             baseUrl: process.env.KINTONE_BASE_URL,
-            // 认证信息
+            // Authentication
             auth: {
               username: process.env.KINTONE_USERNAME,
               password: process.env.KINTONE_PASSWORD,

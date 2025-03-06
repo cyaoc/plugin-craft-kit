@@ -1,52 +1,52 @@
-# Rsbuild 插件 for kintone
+# Plugin Craft Kit for kintone with Rsbuild
 
-专为 Rsbuild 打造的 kintone 插件开发工具链，深度集成 HTTPS 开发环境与自动部署工作流。
+A specialized toolchain for kintone plugin development built on Rsbuild, featuring deep integration with HTTPS development environments and automated deployment workflows.
 
-## 免责声明
-- kintone 是 Cybozu 公司的注册商标。
-- Rsbuild 是字节跳动开源的构建工具。
-- 本项目是独立开发的第三方工具，与 Cybozu 公司和字节跳动没有任何关联。
-- 使用本工具开发的插件是否上架 kintone 市场，需要遵守 Cybozu 公司的相关规定。
+## Disclaimer
+- kintone is a registered trademark of Cybozu Inc.
+- Rsbuild is an open-source build tool developed by ByteDance.
+- This project is an independently developed third-party tool with no affiliation to Cybozu Inc. or ByteDance.
+- Plugins developed using this toolchain must comply with Cybozu Inc.'s regulations if published to the kintone marketplace.
 
-## 核心价值
-### 🚀 Rsbuild 深度集成
-- 自动注入 Rsbuild 入口配置（基于 manifest.json）
-- 开发/生产环境智能构建
-- 与 Rsbuild 配置无缝兼容
+## Core Features
+### 🚀 Seamless Rsbuild Integration
+- Automatic Rsbuild entry configuration injection (based on manifest.json)
+- Intelligent build process for development and production environments
+- Full compatibility with existing Rsbuild configurations
 
-### 🔐 安全开发闭环
-- 自动生成本地 HTTPS 证书（支持 macOS/Windows/Linux）
-- 开发服务器强制 WSS 安全连接
-- 自动签名插件产物
+### 🔐 Secure Development Lifecycle
+- Automatic local HTTPS certificate generation (supports macOS/Windows/Linux)
+- Enforced WSS secure connections for development servers
+- Automated plugin artifact signing
 
-### ⚡ 极速开发体验
-- 热模块替换 (HMR) 支持
-- injectStyles 自动注入 CSS
+### ⚡ Enhanced Developer Experience
+- Hot Module Replacement (HMR) support
+- Automatic CSS injection via injectStyles
 
-### 📦 自动化部署流
-- 编译产物自动打包为 plugin.zip
-- 开发模式自动上传插件至 kintone
-- 开发模式直连本地服务器（无需手动部署）
+### 📦 Streamlined Deployment Pipeline
+- Automatic compilation and packaging of artifacts into plugin.zip
+- Automated plugin uploads to kintone in development mode
+- Direct connection to local development server (eliminating manual deployment)
 
-## 快速开始
+## Quick Start
 
-### 创建项目
+### Project Setup
 ```bash
-# 创建新项目目录
+# Create a new project directory
 mkdir my-kintone-plugin && cd my-kintone-plugin
 
-# 初始化 package.json
+# Initialize package.json
 npm init -y
 
-# 安装必需依赖
+# Install required dependencies
 npm install @rsbuild/core --save-dev
 
-# 安装工具链
+# Install the toolchain
 npm install @cyaod/plugin-craft-kit --save-dev
 ```
 
-### 配置项目
-创建 rsbuild.config.mjs：
+### Project Configuration
+Create rsbuild.config.mjs：
 
 ```javascript
 import { defineConfig } from '@rsbuild/core';
@@ -58,46 +58,46 @@ export default defineConfig({
   ]
 });
 ```
-详细配置可参考 [Playground](./playground/rsbuild.config.mjs) 示例。
+For detailed configuration examples, refer to the [Playground](./playground/rsbuild.config.mjs).
 
-### 开发与构建
+### Development and Building
 ```bash
-# 开发模式（自动生成证书 + 热更新）
+# Development mode (automatic certificate generation + hot reloading)
 npm run dev
 
-# 生产构建（自动签名打包）
+# Production build (automatic signing and packaging)
 npm run build
 ```
 
-## 高级配置项
-| 参数 | 类型 | 默认值 | 说明 |
+## Advanced Configuration Options
+| Parameter | Type | Default | Description |
 |------|------|--------|-----|
-| plugin.manifest | string | 'manifest.json' | 插件清单文件路径 |
-| plugin.ppk | string | 'private.ppk' | 私钥文件路径 |
-| plugin.output | string | 'plugin.zip' | 输出文件名称 |
-| devTools.icon.type | 'badge' \| false | false | 开发模式是否打上Dev角标 |
-| devTools.upload | boolean \| object | false | 开发模式是否自动上传kintone插件 |
-| devTools.upload.client | object | null | [@kintone/rest-api-client 参数](https://github.com/kintone/js-sdk/tree/main/packages/rest-api-client#parameters-for-kintonerestapiclient) |
+| plugin.manifest | string | 'manifest.json' | Path to the plugin manifest file |
+| plugin.ppk | string | 'private.ppk' | Path to the private key file |
+| plugin.output | string | 'plugin.zip' | Output filename |
+| devTools.icon.type | 'badge' \| false | false | Whether to add a Dev badge in development mode |
+| devTools.upload | boolean \| object | false | Whether to automatically upload the plugin to kintone in development mode |
+| devTools.upload.client | object | null | [@kintone/rest-api-client parameters](https://github.com/kintone/js-sdk/tree/main/packages/rest-api-client#parameters-for-kintonerestapiclient) |
 
 
-### 命令行工具
+### Command Line Tools
 ```bash
-# 生成自签名根证书并安装到系统的可信证书列表
+# Generate and install a self-signed root certificate to the system's trusted certificate store
 npx @cyaod/plugin-craft-kit cert install
 
-# 卸载plugin-craft-kit的根证书
+# Uninstall the plugin-craft-kit root certificate
 npx @cyaod/plugin-craft-kit cert uninstall
 
-# 生成并保存自签名证书文件
+# Generate and save self-signed certificate files
 npx @cyaod/plugin-craft-kit cert gen [domains...] [options]
 ```
 
-gen命令可用选项：
+Available options for the gen command:
 
-- -o, --output-dir <path> 证书输出目录
-- -c, --cert-file <filename> 证书文件名
-- -k, --key-file <filename> 私钥文件名
+- -o, --output-dir <path> - Certificate output directory
+- -c, --cert-file <filename> Certificate filename
+- -k, --key-file <filename> Private key filename
 
-## 许可证
+## License
 
-本项目采用 MIT 许可证。
+This project is licensed under the MIT License.
